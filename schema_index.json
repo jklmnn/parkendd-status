@@ -1,0 +1,49 @@
+{
+  "title":"index schema",
+  "type":"object",
+  "properties":{
+    "api_version":{
+      "type":"string"
+    },
+    "reference":{
+      "type":"string"
+    },
+    "server_version":{
+      "type":"string"
+    },
+    "cities":{
+      "type":"object",
+      "patternProperties":{
+        "[A-Z][a-z]*":{
+          "type":"object",
+          "properties":{
+            "name":{
+              "type":"string"
+            },
+            "source":{
+              "type":"string"
+            },
+            "url":{
+              "type":"string"
+            },
+            "active_support":{
+              "type":"boolean"
+            },
+            "coords":{
+              "type":"object",
+              "properties":{
+                "lat":{
+                  "type":"float"
+                },
+                "lng":{
+                  "type":"float"
+                }
+              },
+              "required":["lat", "lng"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
