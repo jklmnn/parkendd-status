@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import unittest
 import json
 import jsonschema
 import requests
@@ -10,8 +9,8 @@ url = "https://api.parkendd.de"
 
 def usage(d0):
   print("Usage: {0} [OPTION]".format(d0))
+  print("Options:")
   print("       --help    show this help")
-  print("       unittest  run unit tests")
   
 def get_cities(index):
   return index['cities'].keys()
@@ -23,7 +22,6 @@ class ApiValidate:
     self.cityschema = cityschema
     
   def index_is_valid(self, data):
-#    jsonschema.validate(data, self.indexschema)
     try:
       jsonschema.validate(data, self.indexschema)
     except:
@@ -32,37 +30,11 @@ class ApiValidate:
   
   
   def city_is_valid(self, data):
-    jsonschema.validate(data, self.cityschema)
     try:
       jsonschema.validate(data, self.cityschema)
     except:
       return False
     return True
-  
-
-class UnitValidate(unittest.TestCase):
-  
-  def setUp(self):
-    self.req = requests.get(url)
-    self.indexschema = json.load("schema_index.json")
-    
-  def create_city(self, city):
-    cr = requests.get("{0}/{1}".format(url, city))
-    def test(self):
-      assertEqual(cr.status_code, 200)
-    setattr(self, "test_{0}".format(city), test)
-    
-  def test_index(self):
-    assertEqual(self.req.status_code, 200)
-    jsonschema.validate(self.req.json(), self.indexschema)
-    cities = get_cities(self.req.json())
-    for city in cities:
-      self.create_city(city)
-      
-  def set_suite(self):
-    self.suite = unittest.TestSuite()
-    self.suite.addTest(UnitValidate('test_index'))
-    return self.suite
 
 if __name__ == "__main__":
   if len(sys.argv) < 2:
@@ -76,13 +48,12 @@ if __name__ == "__main__":
       c_f.close()
       result["index"] = apival.index_is_valid(req.json())
       if result["index"]:
+        cities = []
         for city in get_cities(req.json()):
           rc = requests.get("{0}/{1}".format(url, city));
-          result[city] = apival.city_is_valid(rc.json())
+          cities.append({city: apival.city_is_valid(rc.json())})
+        result["cities"] = cities
     print(result)
   else:
-    if sys.argv[1] == 'unittest':
-      UnitValidate.set_suite()
-    else:
-      usage(sys.argv[0])
-      exit(1)
+    usage(sys.argv[0])
+    exit(1)
