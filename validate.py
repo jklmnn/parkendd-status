@@ -14,7 +14,6 @@ def usage(d0):
   print("       unittest  run unit tests")
   
 def get_cities(index):
-  print(index)
   return index['cities'].keys()
   
 class ApiValidate:
@@ -24,6 +23,7 @@ class ApiValidate:
     self.cityschema = cityschema
     
   def index_is_valid(self, data):
+#    jsonschema.validate(data, self.indexschema)
     try:
       jsonschema.validate(data, self.indexschema)
     except:
@@ -32,6 +32,7 @@ class ApiValidate:
   
   
   def city_is_valid(self, data):
+    jsonschema.validate(data, self.cityschema)
     try:
       jsonschema.validate(data, self.cityschema)
     except:
@@ -69,9 +70,15 @@ if __name__ == "__main__":
     result = {"status": req.status_code}
     if req.status_code == 200:
       i_f = open("schema_index.json", "r")
-      apival = ApiValidate(json.load(i_f), {})#json.load("schema_city.json"))
+      c_f = open("schema_city.json", "r")
+      apival = ApiValidate(json.load(i_f), json.load(c_f))
       i_f.close()
+      c_f.close()
       result["index"] = apival.index_is_valid(req.json())
+      if result["index"]:
+        for city in get_cities(req.json()):
+          rc = requests.get("{0}/{1}".format(url, city));
+          result[city] = apival.city_is_valid(rc.json())
     print(result)
   else:
     if sys.argv[1] == 'unittest':

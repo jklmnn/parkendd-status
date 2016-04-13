@@ -33,17 +33,19 @@
               "type":"object",
               "properties":{
                 "lat":{
-                  "type":"float"
+                  "type":"number"
                 },
                 "lng":{
-                  "type":"float"
+                  "type":"number"
                 }
               },
               "required":["lat", "lng"]
             }
-          }
+          },
+          "required":["name", "active_support", "coords"]
         }
       }
     }
-  }
+  },
+  "required":["cities"]
 }
