@@ -1,4 +1,4 @@
-url = 'https://api.parkendd.de/'
+url = 'http://127.0.0.1/parkapi/'
 
 function getFile(filepath){
   var request = new XMLHttpRequest();
@@ -92,21 +92,28 @@ function getCities(index){
   return Object.keys(index.cities);
 }
 
-function setProgress(progress){
+function setProgress(progress, state){
   var progressBar = document.getElementById("progress");
   progressBar.style.width = progress;
   if(progress == "100%"){
-    progressBar.className += " progress-bar-success";
+    if(state == "success"){
+      progressBar.className = "progress-bar progress-bar-success";
+    }else{
+      progressBar.className = "progress-bar progress-bar-danger";
+    }
   }
 }
 
 window.onload = function WindowLoad(event){
   val_index  = jsen(JSON.parse(getFile("./schema_index.json")));
   val_city = jsen(JSON.parse(getFile("./schema_city.json")));
-  var tbody = document.getElementById("tbody");
+  var ibody = document.getElementById("tbody-server");
+  var ctable = document.getElementById("table-city");
+  var cbody = document.getElementById("tbody-city");
   istatus = validateIndex();
-  tbody.appendChild(createTableRow(istatus.path, istatus.status, istatus.json));
+  ibody.appendChild(createTableRow(url, istatus.status, istatus.json));
   if(istatus.status == "Ok"){
+    ctable.style.visibility = "visible";
     var progress = 15;
     setProgress(15+"%");
     var cities = getCities(istatus.data);
@@ -114,12 +121,12 @@ window.onload = function WindowLoad(event){
     for(var i = 0; i < cities.length; i++){
       var status = validateCity(cities[i]);
       name = istatus.data.cities[cities[i]].name;
-      tbody.appendChild(createTableRow(name, status.status, status.json));
+      cbody.appendChild(createTableRow(name, status.status, status.json));
       progress += step;
-      setProgress(progress + "%");
+      setProgress(progress + "%", "");
     }
-    setProgress("100%");
+    setProgress("100%", "success");
   }else{
-    setProgress("100%");
+    setProgress("100%", "");
   }
 }

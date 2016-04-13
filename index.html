@@ -25,15 +25,26 @@
           <div class="progress-bar" role="progressbar" style="width: 0%;" id="progress"></div>
         </div>
           <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped" id="table-server">
               <thead>
                 <tr>
-                  <th>Path/City</th>
-                  <th>HTTP-Status</th>
-                  <th>JSON Validation</th>
+                  <th>Server</th>
+                  <th>Status</th>
+                  <th>Data</th>
                 </tr>
               </thead>
-              <tbody id="tbody">
+              <tbody id="tbody-server">
+              </tbody>
+            </table>
+            <table class="table table-striped" id="table-city" style="visibility: hidden;">
+              <thead>
+                <tr>
+                  <th>City</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-city">
               </tbody>
             </table>
           </div>
