@@ -93,7 +93,8 @@ window.onload = function WindowLoad(event){
   var step = 85/cities.length;
   for(var i = 0; i < cities.length; i++){
     var status = validateCity(cities[i]);
-    tbody.appendChild(createTableRow(status.path, status.status, status.json));
+    name = istatus.data.cities[cities[i]].name;
+    tbody.appendChild(createTableRow(name, status.status, status.json));
     progress += step;
     setProgress(progress + "%");
   }
