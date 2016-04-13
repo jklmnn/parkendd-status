@@ -5,7 +5,7 @@ import jsonschema
 import requests
 import sys
 
-url = "https://api.parkendd.de"
+url = "https://api.parkendd.de/"
 
 def usage(d0):
   print("Usage: {0} [OPTION]".format(d0))

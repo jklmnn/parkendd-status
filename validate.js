@@ -1,3 +1,5 @@
+url = 'https://api.parkendd.de/'
+
 function getFile(filepath){
   var request = new XMLHttpRequest();
   request.open('GET', filepath, false);
@@ -5,10 +7,12 @@ function getFile(filepath){
   return request.responseText;
 }
 
-function createLabel(text, success){
+function createLabel(text, state){
   var label = document.createElement('span');
-  if(success){
+  if(state == "success"){
     label.className = "label label-success";
+  }else if(state == "unknown"){
+    label.className = "label label-warning";
   }else{
     label.className = "label label-danger";
   }
@@ -22,18 +26,20 @@ function createTableRow(path, status, json){
   td_path.appendChild(document.createTextNode(path));
   var td_status = document.createElement('td');
   var status_label;
-  if(status == 200){
-    status_label = createLabel(status, true);
+  if(status == "Ok"){
+    status_label = createLabel(status, "success");
   }else{
-    status_label = createLabel(status, false);
+    status_label = createLabel(status, "");
   }
   td_status.appendChild(status_label);
   var td_json = document.createElement('td');
   var json_label;
   if(json == "valid"){
-    json_label = createLabel(json, true);
+    json_label = createLabel(json, "success");
+  }else if (json == "unknown"){
+    json_label = createLabel(json, "unknown")
   }else{
-    json_label = createLabel(json, false);
+    json_label = createLabel(json, "");
   }
   td_json.appendChild(json_label);
   tr.appendChild(td_path);
@@ -44,29 +50,42 @@ function createTableRow(path, status, json){
 
 function validateCity(city){
   var request = new XMLHttpRequest();
-  request.open('GET', 'https://api.parkendd.de/' + city, false);
-  request.send();
-  var status = {"json":"valid", "path":city, "status":request.status};
+  request.open('GET', url + city, false);
+  try{
+    request.send();
+  }catch (exception){
+    return {"json":"unknown", "path":city, "status":"Error"};
+  }
   if(request.status == 200){
     if(val_city(JSON.parse(request.responseText))){
-      status.json = "valid";
+      return {"json":"valid", "path":city, "status":"Ok"};
+    }else{
+      console.log(val_city.errors);
+      return {"json":"invalid", "path":city, "status":"Ok"};
     }
+  }else{
+    return {"json":"unknown", "path":city, "status":"Error"};
   }
-  return status;
 }
 
 function validateIndex(){
   var request = new XMLHttpRequest();
-  request.open('GET', 'https://api.parkendd.de/', false);
-  request.send();
-  var data = JSON.parse(request.responseText);
-  var status = {"json":"valid", "path":"/", "status":request.status, "data":data};
-  if(request.status == 200){
-    if(val_index(data)){
-      status.json = "valid";
-    }
+  request.open('GET', url, false);
+  try{
+    request.send();
+  }catch(exception){
+    return {"json":"unknown", "path":"/", "status":"Error", "data":null};
   }
-  return status;
+  if(request.status == 200){
+    var data = JSON.parse(request.responseText);
+    if(val_index(data)){
+      return {"json":"valid", "path":"/", "status":"Ok", "data":data};
+    }else{
+      return {"json":"invalid", "path":"/", "status":"Ok", "data":data};
+    }
+  }else{
+    return {"json":"unknown", "path":"/", "status":"Error", "data":null};
+  }
 }
 
 function getCities(index){
@@ -82,21 +101,25 @@ function setProgress(progress){
 }
 
 window.onload = function WindowLoad(event){
-  val_index  = jsen(JSON.parse(getFile("https://raw.githubusercontent.com/jklmnn/parkendd-status/master/schema_index.json")));
-  val_city = jsen(JSON.parse(getFile("https://raw.githubusercontent.com/jklmnn/parkendd-status/master/schema_city.json")));
+  val_index  = jsen(JSON.parse(getFile("./schema_index.json")));
+  val_city = jsen(JSON.parse(getFile("./schema_city.json")));
   var tbody = document.getElementById("tbody");
   istatus = validateIndex();
   tbody.appendChild(createTableRow(istatus.path, istatus.status, istatus.json));
-  var progress = 15;
-  setProgress(15+"%");
-  var cities = getCities(istatus.data);
-  var step = 85/cities.length;
-  for(var i = 0; i < cities.length; i++){
-    var status = validateCity(cities[i]);
-    name = istatus.data.cities[cities[i]].name;
-    tbody.appendChild(createTableRow(name, status.status, status.json));
-    progress += step;
-    setProgress(progress + "%");
+  if(istatus.status == "Ok"){
+    var progress = 15;
+    setProgress(15+"%");
+    var cities = getCities(istatus.data);
+    var step = 85/cities.length;
+    for(var i = 0; i < cities.length; i++){
+      var status = validateCity(cities[i]);
+      name = istatus.data.cities[cities[i]].name;
+      tbody.appendChild(createTableRow(name, status.status, status.json));
+      progress += step;
+      setProgress(progress + "%");
+    }
+    setProgress("100%");
+  }else{
+    setProgress("100%");
   }
-  setProgress("100%");
 }

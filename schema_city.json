@@ -14,14 +14,14 @@
         "type":"object",
         "properties":{
           "address":{
-            "oneOf":[{
+            "anyOf":[{
               "type":"string"
             },{
               "type":"null"
             }]
           },
           "coords":{
-            "oneOf":[{
+            "anyOf":[{
               "type":"object",
               "properties":{
                 "lat":{
@@ -45,7 +45,7 @@
             "type":"string"
           },
           "lot_type":{
-            "oneOf":[{
+            "anyOf":[{
               "type":"string"
             },{
               "type":"null"
@@ -55,7 +55,7 @@
             "type":"string"
           },
           "region":{
-            "oneOf":[{
+            "anyOf":[{
               "type":"string"
             },{
               "type":"null"
