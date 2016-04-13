@@ -1,4 +1,4 @@
-url = 'http://127.0.0.1/parkapi/'
+url = 'https://api.parkendd.de/'
 
 function getFile(filepath){
   var request = new XMLHttpRequest();
