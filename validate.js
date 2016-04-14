@@ -89,6 +89,8 @@ function fetchJSON(path){
   var request = new XMLHttpRequest();
   request.open('GET', url + path, true);
   request.onreadystatechange = function(){
+    //console.log("rs: " + request.readyState + "; s: " + request.status)
+    var ibody = document.getElementById("tbody-server");
     if(request.readyState == 4 && request.status == 200){
       if(path == ""){
         validateIndex(request.responseText);
@@ -96,10 +98,19 @@ function fetchJSON(path){
         validateCity(indexdata.cities[path].name, request.responseText);
       }
     }else if(request.readyState == 2 && request.status >= 400){
-      var ibody = document.getElementById("tbody-server");
       ibody.appendChild(createTableRow(url, request.status, "unknown"));
       setProgress(100);
       setProgressState("error");
+    }else if(request.readyState == 2 && request.status == 0){
+      if(path == ""){
+        ibody.appendChild(createTableRow(url, "50x", "unknown"));
+        setProgress(100);
+        setProgressState("error");
+      }else{
+        var cbody = document.getElementById("tbody-city");
+        cbody.appendChild(createTableRow(indexdata.cities[path].name, "50x", "unknown"));
+        stepProgress();
+      }
     };
   };
   request.send();
