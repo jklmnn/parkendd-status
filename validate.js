@@ -89,12 +89,11 @@ function fetchJSON(path){
   var request = new XMLHttpRequest();
   request.open('GET', url + path, true);
   request.onreadystatechange = function(){
-    console.log("rstate: " + request.readyState + "; http status: " + request.status);
     if(request.readyState == 4 && request.status == 200){
       if(path == ""){
         validateIndex(request.responseText);
       }else{
-        validateCity(path, request.responseText);
+        validateCity(indexdata.cities[path].name, request.responseText);
       }
     }else if(request.readyState == 2 && request.status >= 400){
       var ibody = document.getElementById("tbody-server");
@@ -108,6 +107,7 @@ function fetchJSON(path){
 
 function validateIndex(response){
   var data = JSON.parse(response);
+  indexdata = data
   var ibody = document.getElementById("tbody-server");
   if(val_index(data)){
     var ctable = document.getElementById("table-city");
