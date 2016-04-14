@@ -1,4 +1,31 @@
-url = 'https://api.parkendd.de/'
+url = 'https://api.parkendd.de/';
+progressBar = {"progress":0, "status":"default", "step":10, "element":null};
+
+function stepProgress(){
+  progressBar.progress += progressBar.step;
+  progressBar.element.style.width = progressBar.progress + "%";
+  if(progressBar.progress >= 100){
+    setProgressState("success");
+  }
+}
+
+function setProgress(progress){
+  progressBar.progress = progress;
+  progressBar.element.style.width = progressBar.progress + "%";
+}
+
+function setProgressState(state){
+  if(state == "success"){
+    progressBar.status  = state;
+    progressBar.element.className = "progress-bar progress-bar-success";
+  }else if(state == "error"){
+    progressBar.status = state;
+    progressBar.element.className = "progress-bar progress-bar-danger";
+  }else{
+    progressBar.status = "default";
+    progressBar.element.className = "progress-bar";
+  }
+}
 
 function getFile(filepath){
   var request = new XMLHttpRequest();
@@ -26,7 +53,7 @@ function createTableRow(path, status, json){
   td_path.appendChild(document.createTextNode(path));
   var td_status = document.createElement('td');
   var status_label;
-  if(status == "Ok"){
+  if(status < 400){
     status_label = createLabel(status, "success");
   }else{
     status_label = createLabel(status, "");
@@ -48,85 +75,61 @@ function createTableRow(path, status, json){
   return tr;
 }
 
-function validateCity(city){
-  var request = new XMLHttpRequest();
-  request.open('GET', url + city, false);
-  try{
-    request.send();
-  }catch (exception){
-    return {"json":"unknown", "path":city, "status":"Error"};
-  }
-  if(request.status == 200){
-    if(val_city(JSON.parse(request.responseText))){
-      return {"json":"valid", "path":city, "status":"Ok"};
-    }else{
-      console.log(val_city.errors);
-      return {"json":"invalid", "path":city, "status":"Ok"};
-    }
+function validateCity(city, response){
+  var cbody = document.getElementById("tbody-city");
+  if(val_city(JSON.parse(response))){
+    cbody.appendChild(createTableRow(city, 200, "valid"));
   }else{
-    return {"json":"unknown", "path":city, "status":"Error"};
+    cbody.appendChild(createTableRow(city, 200, "invalid"));
   }
+  stepProgress();
 }
 
-function validateIndex(){
+function fetchJSON(path){
   var request = new XMLHttpRequest();
-  request.open('GET', url, false);
-  try{
-    request.send();
-  }catch(exception){
-    return {"json":"unknown", "path":"/", "status":"Error", "data":null};
-  }
-  if(request.status == 200){
-    var data = JSON.parse(request.responseText);
-    if(val_index(data)){
-      return {"json":"valid", "path":"/", "status":"Ok", "data":data};
-    }else{
-      return {"json":"invalid", "path":"/", "status":"Ok", "data":data};
+  request.open('GET', url + path, true);
+  request.onreadystatechange = function(){
+    console.log("rstate: " + request.readyState + "; http status: " + request.status);
+    if(request.readyState == 4 && request.status == 200){
+      if(path == ""){
+        validateIndex(request.responseText);
+      }else{
+        validateCity(path, request.responseText);
+      }
+    }else if(request.readyState == 2 && request.status >= 400){
+      var ibody = document.getElementById("tbody-server");
+      ibody.appendChild(createTableRow(url, request.status, "unknown"));
+      setProgress(100);
+      setProgressState("error");
+    };
+  };
+  request.send();
+}
+
+function validateIndex(response){
+  var data = JSON.parse(response);
+  var ibody = document.getElementById("tbody-server");
+  if(val_index(data)){
+    var ctable = document.getElementById("table-city");
+    ctable.style.visibility = "visible";
+    var cities = Object.keys(data.cities);
+    step = 100/(cities.length + 1);
+    progressBar.step = step;
+    stepProgress();
+    for(var i = 0; i < cities.length; i++){
+      fetchJSON(cities[i]);
     }
+    ibody.appendChild(createTableRow(url, 200, "valid"));
   }else{
-    return {"json":"unknown", "path":"/", "status":"Error", "data":null};
-  }
-}
-
-function getCities(index){
-  return Object.keys(index.cities);
-}
-
-function setProgress(progress, state){
-  var progressBar = document.getElementById("progress");
-  progressBar.style.width = progress;
-  if(progress == "100%"){
-    if(state == "success"){
-      progressBar.className = "progress-bar progress-bar-success";
-    }else{
-      progressBar.className = "progress-bar progress-bar-danger";
-    }
+    ibody.appendChild(createTableRow(url, 200, "invalid"));
+    setProgress(100);
+    setProgressState("error");
   }
 }
 
 window.onload = function WindowLoad(event){
   val_index  = jsen(JSON.parse(getFile("./schema_index.json")));
   val_city = jsen(JSON.parse(getFile("./schema_city.json")));
-  var ibody = document.getElementById("tbody-server");
-  var ctable = document.getElementById("table-city");
-  var cbody = document.getElementById("tbody-city");
-  istatus = validateIndex();
-  ibody.appendChild(createTableRow(url, istatus.status, istatus.json));
-  if(istatus.status == "Ok"){
-    ctable.style.visibility = "visible";
-    var progress = 15;
-    setProgress(15+"%");
-    var cities = getCities(istatus.data);
-    var step = 85/cities.length;
-    for(var i = 0; i < cities.length; i++){
-      var status = validateCity(cities[i]);
-      name = istatus.data.cities[cities[i]].name;
-      cbody.appendChild(createTableRow(name, status.status, status.json));
-      progress += step;
-      setProgress(progress + "%", "");
-    }
-    setProgress("100%", "success");
-  }else{
-    setProgress("100%", "");
-  }
+  progressBar.element = document.getElementById("progress");
+  fetchJSON("");
 }
