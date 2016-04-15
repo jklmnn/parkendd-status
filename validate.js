@@ -99,7 +99,7 @@ function createTableRow(path, status, json, age){
 }
 
 function validateCity(city, response, data){
-  var ddate = new Date(data.last_updated);
+  var ddate = new Date(data.last_downloaded);
   var now = new Date()
   var time = (now.getTime() - ddate.getTime()) / (1000) + ddate.getTimezoneOffset() * 60;
   var cbody = document.getElementById("tbody-city");
