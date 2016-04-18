@@ -5,7 +5,7 @@ import jsonschema
 import requests
 import sys
 
-url = "https://api.parkendd.de/"
+url = "https://api.parkendd.de"
 
 def usage(d0):
   print("Usage: {0} [OPTION]".format(d0))
@@ -51,8 +51,11 @@ if __name__ == "__main__":
       if result["index"]:
         cities = []
         for city in get_cities(req.json()):
-          rc = requests.get("{0}/{1}".format(url, city));
-          cities.append({city: apival.city_is_valid(rc.json())})
+          rc = requests.get("{0}/{1}".format(url, city))
+          try:
+            cities.append({city: apival.city_is_valid(rc.json())})
+          except json.decoder.JSONDecodeError:
+            cities.append(False)
         result["cities"] = cities
     print(result)
   else:
