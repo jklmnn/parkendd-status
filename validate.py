@@ -1,9 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import json
 import jsonschema
 import requests
 import sys
+import datetime
 
 class ApiValidate:
   
@@ -17,6 +18,8 @@ class ApiValidate:
   
   def validate_url(self, url):
     data = {}
+    if not url.endswith("/"):
+        url = url + "/"
     req = requests.get(url)
     data['status'] = req.status_code
     if req.status_code == 200:
@@ -30,6 +33,9 @@ class ApiValidate:
           if creq.status_code == 200:
             if self.city_is_valid(creq.json()):
               co['json'] = 'valid'
+              timestamp = datetime.datetime.strptime(creq.json()['last_downloaded'], "%Y-%m-%dT%H:%M:%S")
+              now = datetime.datetime.utcnow()
+              co['age'] = (now - timestamp).total_seconds()
             else:
               co['json'] = 'invalid'
           else:
