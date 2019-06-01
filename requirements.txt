@@ -1,0 +1,3 @@
+jsonschema
+requests
+matrix_client
